@@ -1,0 +1,124 @@
+MainActivity.java
+package com.example.exno3;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText e1;
+    Spinner s1;
+    Button b1;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        e1 = findViewById(R.id.editTextText);
+        s1 = findViewById(R.id.spinner);
+        b1 = findViewById(R.id.button);
+
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name = e1.getText().toString();
+                String shape = s1.getSelectedItem().toString();
+
+                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
+                intent.putExtra("Name", name);
+                intent.putExtra("Shape", shape);
+                startActivity(intent);
+            }
+        });
+    }
+}
+
+MainActivity2.java
+package com.example.exno3;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.os.Bundle;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity2 extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main1);
+
+        TextView t1 = findViewById(R.id.textView);
+        TextView t2 = findViewById(R.id.textView2);
+        ImageView imageView = findViewById(R.id.imageView);
+
+        String name = getIntent().getStringExtra("Name");
+        String shape = getIntent().getStringExtra("Shape");
+
+        t1.setText("Name: " + name);
+        t2.setText("Shape: " + shape);
+
+        Bitmap bitmap = Bitmap.createBitmap(800, 800, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint();
+        paint.setStrokeWidth(6);
+
+        if (shape.equals("Triangle")) {
+
+            paint.setColor(Color.BLUE);
+            paint.setStyle(Paint.Style.STROKE);
+            canvas.drawLine(400, 200, 200, 500, paint);
+            canvas.drawLine(200, 500, 600, 500, paint);
+            canvas.drawLine(600, 500, 400, 200, paint);
+
+        } else if (shape.equals("House")) {
+
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.BLUE);
+            canvas.drawRect(250, 400, 550, 700, paint);
+
+            paint.setColor(Color.GREEN);
+            Path roof = new Path();
+            roof.moveTo(250, 400);
+            roof.lineTo(400, 250);
+            roof.lineTo(550, 400);
+            roof.close();
+            canvas.drawPath(roof, paint);
+
+            paint.setColor(Color.GREEN);
+            canvas.drawRect(360, 550, 440, 700, paint);
+
+        } else if (shape.equals("Smiley Face")) {
+
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(Color.YELLOW);
+            canvas.drawCircle(400, 400, 150, paint);
+
+            paint.setColor(Color.BLACK);
+            canvas.drawCircle(350, 360, 20, paint);
+            canvas.drawCircle(450, 360, 20, paint);
+
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(8);
+            Path smile = new Path();
+            smile.moveTo(330, 450);
+            smile.quadTo(400, 500, 470, 450);
+            canvas.drawPath(smile, paint);
+        }
+
+        imageView.setImageBitmap(bitmap);
+    }
+}
