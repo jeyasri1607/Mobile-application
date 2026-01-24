@@ -1,0 +1,311 @@
+MainActivity.java
+package com.example.exno4;
+
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText name, id, actor, budget;
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        name = findViewById(R.id.etMovieName);
+        id = findViewById(R.id.etMovieId);
+        actor = findViewById(R.id.etActor);
+        budget = findViewById(R.id.etBudget);
+
+        db = openOrCreateDatabase("MovieDB", MODE_PRIVATE, null);
+
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS Movies(" +
+                        "movieName TEXT PRIMARY KEY," +
+                        "movieId INTEGER," +
+                        "actor TEXT," +
+                        "budget REAL)"
+        );
+
+        // ---------------- INSERT ----------------
+        findViewById(R.id.btnInsert).setOnClickListener(v -> {
+
+            if (name.getText().toString().trim().isEmpty()) {
+                Toast.makeText(this, "Movie Name required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ContentValues cv = new ContentValues();
+            cv.put("movieName", name.getText().toString().trim());
+            cv.put("movieId", id.getText().toString().trim());
+            cv.put("actor", actor.getText().toString().trim());
+            cv.put("budget", budget.getText().toString().trim());
+
+            long res = db.insert("Movies", null, cv);
+            Toast.makeText(this, res == -1 ? "Insert Failed" : "Inserted", Toast.LENGTH_SHORT).show();
+        });
+
+        // ---------------- UPDATE (NEW IDEA) ----------------
+        findViewById(R.id.btnUpdate).setOnClickListener(v -> {
+
+            String movieName = name.getText().toString().trim();
+
+            if (movieName.isEmpty()) {
+                Toast.makeText(this, "Enter Movie Name to Update", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Check movie exists
+            Cursor c = db.rawQuery("SELECT * FROM Movies WHERE movieName=?", new String[]{movieName});
+            if (!c.moveToFirst()) {
+                Toast.makeText(this, "Movie not found", Toast.LENGTH_SHORT).show();
+                c.close();
+                return;
+            }
+            c.close();
+
+            String[] options = {"Movie Name", "Movie ID", "Actor", "Budget"};
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("What do you want to edit?");
+            builder.setItems(options, (dialog, which) -> {
+
+                EditText input = new EditText(this);
+                input.setHint("Enter new value");
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Enter New Value")
+                        .setView(input)
+                        .setPositiveButton("UPDATE", (d, w) -> {
+
+                            String newValue = input.getText().toString().trim();
+                            if (newValue.isEmpty()) {
+                                Toast.makeText(this, "Value cannot be empty", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            ContentValues cv = new ContentValues();
+
+                            switch (which) {
+                                case 0:
+                                    cv.put("movieName", newValue);
+                                    break;
+                                case 1:
+                                    cv.put("movieId", Integer.parseInt(newValue));
+                                    break;
+                                case 2:
+                                    cv.put("actor", newValue);
+                                    break;
+                                case 3:
+                                    cv.put("budget", Double.parseDouble(newValue));
+                                    break;
+                            }
+
+                            int rows = db.update("Movies", cv, "movieName=?", new String[]{movieName});
+                            Toast.makeText(this, rows > 0 ? "Updated Successfully" : "Update Failed", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+
+            builder.show();
+        });
+
+        // ---------------- DELETE ----------------
+        findViewById(R.id.btnDelete).setOnClickListener(v -> {
+
+            String movieName = name.getText().toString().trim();
+            if (movieName.isEmpty()) {
+                Toast.makeText(this, "Enter Movie Name to Delete", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int rows = db.delete("Movies", "movieName=?", new String[]{movieName});
+            Toast.makeText(this, rows > 0 ? "Deleted" : "Movie Not Found", Toast.LENGTH_SHORT).show();
+        });
+
+        // ---------------- SHOW ----------------
+        findViewById(R.id.btnShow).setOnClickListener(v -> {
+
+            Cursor c = db.rawQuery("SELECT * FROM Movies", null);
+            StringBuilder data = new StringBuilder();
+
+            while (c.moveToNext()) {
+                data.append("Movie Name: ").append(c.getString(0))
+                        .append("\nMovie ID: ").append(c.getInt(1))
+                        .append("\nActor: ").append(c.getString(2))
+                        .append("\nBudget: ").append(c.getDouble(3))
+                        .append("\n\n");
+            }
+            c.close();
+
+            Intent i = new Intent(this, MainActivity2.class);
+            i.putExtra("movies", data.toString());
+            startActivity(i);
+        });
+    }
+}
+
+MainActivity2.java
+package com.example.exno4;
+
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.widget.*;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText name, id, actor, budget;
+    SQLiteDatabase db;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        name = findViewById(R.id.etMovieName);
+        id = findViewById(R.id.etMovieId);
+        actor = findViewById(R.id.etActor);
+        budget = findViewById(R.id.etBudget);
+
+        db = openOrCreateDatabase("MovieDB", MODE_PRIVATE, null);
+
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS Movies(" +
+                        "movieName TEXT PRIMARY KEY," +
+                        "movieId INTEGER," +
+                        "actor TEXT," +
+                        "budget REAL)"
+        );
+
+        // ---------------- INSERT ----------------
+        findViewById(R.id.btnInsert).setOnClickListener(v -> {
+
+            if (name.getText().toString().trim().isEmpty()) {
+                Toast.makeText(this, "Movie Name required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            ContentValues cv = new ContentValues();
+            cv.put("movieName", name.getText().toString().trim());
+            cv.put("movieId", id.getText().toString().trim());
+            cv.put("actor", actor.getText().toString().trim());
+            cv.put("budget", budget.getText().toString().trim());
+
+            long res = db.insert("Movies", null, cv);
+            Toast.makeText(this, res == -1 ? "Insert Failed" : "Inserted", Toast.LENGTH_SHORT).show();
+        });
+
+        // ---------------- UPDATE (NEW IDEA) ----------------
+        findViewById(R.id.btnUpdate).setOnClickListener(v -> {
+
+            String movieName = name.getText().toString().trim();
+
+            if (movieName.isEmpty()) {
+                Toast.makeText(this, "Enter Movie Name to Update", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Check movie exists
+            Cursor c = db.rawQuery("SELECT * FROM Movies WHERE movieName=?", new String[]{movieName});
+            if (!c.moveToFirst()) {
+                Toast.makeText(this, "Movie not found", Toast.LENGTH_SHORT).show();
+                c.close();
+                return;
+            }
+            c.close();
+
+            String[] options = {"Movie Name", "Movie ID", "Actor", "Budget"};
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("What do you want to edit?");
+            builder.setItems(options, (dialog, which) -> {
+
+                EditText input = new EditText(this);
+                input.setHint("Enter new value");
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Enter New Value")
+                        .setView(input)
+                        .setPositiveButton("UPDATE", (d, w) -> {
+
+                            String newValue = input.getText().toString().trim();
+                            if (newValue.isEmpty()) {
+                                Toast.makeText(this, "Value cannot be empty", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            ContentValues cv = new ContentValues();
+
+                            switch (which) {
+                                case 0:
+                                    cv.put("movieName", newValue);
+                                    break;
+                                case 1:
+                                    cv.put("movieId", Integer.parseInt(newValue));
+                                    break;
+                                case 2:
+                                    cv.put("actor", newValue);
+                                    break;
+                                case 3:
+                                    cv.put("budget", Double.parseDouble(newValue));
+                                    break;
+                            }
+
+                            int rows = db.update("Movies", cv, "movieName=?", new String[]{movieName});
+                            Toast.makeText(this, rows > 0 ? "Updated Successfully" : "Update Failed", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+
+            builder.show();
+        });
+
+        // ---------------- DELETE ----------------
+        findViewById(R.id.btnDelete).setOnClickListener(v -> {
+
+            String movieName = name.getText().toString().trim();
+            if (movieName.isEmpty()) {
+                Toast.makeText(this, "Enter Movie Name to Delete", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int rows = db.delete("Movies", "movieName=?", new String[]{movieName});
+            Toast.makeText(this, rows > 0 ? "Deleted" : "Movie Not Found", Toast.LENGTH_SHORT).show();
+        });
+
+        // ---------------- SHOW ----------------
+        findViewById(R.id.btnShow).setOnClickListener(v -> {
+
+            Cursor c = db.rawQuery("SELECT * FROM Movies", null);
+            StringBuilder data = new StringBuilder();
+
+            while (c.moveToNext()) {
+                data.append("Movie Name: ").append(c.getString(0))
+                        .append("\nMovie ID: ").append(c.getInt(1))
+                        .append("\nActor: ").append(c.getString(2))
+                        .append("\nBudget: ").append(c.getDouble(3))
+                        .append("\n\n");
+            }
+            c.close();
+
+            Intent i = new Intent(this, MainActivity2.class);
+            i.putExtra("movies", data.toString());
+            startActivity(i);
+        });
+    }
+}
