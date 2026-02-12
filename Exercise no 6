@@ -1,0 +1,80 @@
+package com.example.ex6;
+
+import android.graphics.drawable.AnimationDrawable;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.ImageView;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+public class MainActivity extends AppCompatActivity {
+
+    ImageView img;
+    Button b1;
+    MediaPlayer m1;
+    AnimationDrawable animationDrawable;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top,
+                    systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        img = findViewById(R.id.imageView2);
+        b1 = findViewById(R.id.button2);
+
+        m1 = MediaPlayer.create(MainActivity.this, R.raw.aud);
+
+        b1.setOnClickListener(view -> {
+
+            // Thread for animation
+            Thread animationThread = new Thread(() -> {
+                runOnUiThread(() -> {
+                    animationDrawable = new AnimationDrawable();
+                    animationDrawable.addFrame(getDrawable(R.drawable.img), 500);
+                    animationDrawable.addFrame(getDrawable(R.drawable.img3), 500);
+                    animationDrawable.addFrame(getDrawable(R.drawable.img2), 500);
+                    animationDrawable.addFrame(getDrawable(R.drawable.img5), 500);
+                    animationDrawable.addFrame(getDrawable(R.drawable.img7), 500);
+                    animationDrawable.setOneShot(false);
+
+                    img.setBackground(animationDrawable);
+                    animationDrawable.start();
+                });
+            });
+
+            // Thread for sound
+            Thread soundThread = new Thread(() -> {
+                runOnUiThread(() -> {
+                    if (m1 != null) {
+                        m1.start();
+                    }
+                });
+            });
+
+            animationThread.start();
+            soundThread.start();
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (m1 != null) {
+            m1.release();
+            m1 = null;
+        }
+    }
+}
