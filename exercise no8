@@ -1,0 +1,111 @@
+package com.example.ex8sri;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.os.Environment;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+
+public class MainActivity extends AppCompatActivity {
+
+    EditText e1;
+    TextView t1;
+    Button b1, b2;
+    File file;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        e1 = findViewById(R.id.e1);
+        t1 = findViewById(R.id.t1);
+        b1 = findViewById(R.id.b1);
+        b2 = findViewById(R.id.b2);
+
+        // Runtime Permission
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    1);
+        }
+
+        // File Path
+        file = new File(getExternalFilesDir(null), "myfile.txt");
+
+        // WRITE BUTTON
+        b1.setOnClickListener(v -> {
+
+            try {
+                String data = e1.getText().toString();
+
+                file = new File(getExternalFilesDir(null), "myfile.txt");
+
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(data.getBytes());
+                fos.close();
+
+                Toast.makeText(MainActivity.this,
+                        "Data Written Successfully",
+                        Toast.LENGTH_SHORT).show();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this,
+                        "Error Writing File",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // READ BUTTON
+        b2.setOnClickListener(v -> {
+
+            try {
+
+                file = new File(getExternalFilesDir(null), "myfile.txt");
+
+                FileInputStream fin = new FileInputStream(file);
+                BufferedReader br = new BufferedReader(
+                        new InputStreamReader(fin));
+
+                String line, data = "";
+
+                while ((line = br.readLine()) != null) {
+                    data += line;
+                }
+
+                br.close();
+                fin.close();
+
+                t1.setText(data);
+
+                Toast.makeText(MainActivity.this,
+                        "Data Read Successfully",
+                        Toast.LENGTH_SHORT).show();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this,
+                        "Error Reading File",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}
